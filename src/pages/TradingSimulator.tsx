@@ -14,12 +14,11 @@ import {
   Area,
   AreaChart
 } from "recharts";
-import { TrendingUp, TrendingDown, Bot, Eye, DollarSign, Timer, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingUp, TrendingDown, Bot, DollarSign, Timer, ChevronDown, ChevronUp, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import SimpleBuyModal from "@/components/SimpleBuyModal";
 import AgentPortfolioChart from "@/components/AgentPortfolioChart";
-import PortfolioHistory from "@/components/PortfolioHistory";
 
 interface Agent {
   id: string;
@@ -226,30 +225,7 @@ const TradingSimulator = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [selectedAgentForBetting, setSelectedAgentForBetting] = useState<Agent | null>(agents[0]);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
-  const [currentCrypto, setCurrentCrypto] = useState(0);
-  const [isManualSelection, setIsManualSelection] = useState(false);
-  
-  const cryptos = ["BTC", "ETH", "SOL", "XRP", "BNB"];
-  const cryptoData = [btcPriceData, ethPriceData, solPriceData, xrpPriceData, bnbPriceData];
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isManualSelection) {
-        setCurrentCrypto((prev) => (prev + 1) % cryptos.length);
-      }
-    }, 7000);
-    
-    return () => clearInterval(interval);
-  }, [isManualSelection, cryptos.length]);
-  
-  const handleCryptoSelect = (index: number) => {
-    setCurrentCrypto(index);
-    setIsManualSelection(true);
-    
-    setTimeout(() => {
-      setIsManualSelection(false);
-    }, 15000);
-  };
+  const [tradingMode, setTradingMode] = useState<"buy" | "sell">("buy");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -262,6 +238,10 @@ const TradingSimulator = () => {
 
   const getPnLColor = (pnl: number) => {
     return pnl >= 0 ? "text-green-600" : "text-red-600";
+  };
+
+  const getPercentChange = (pnl: number, portfolio: number) => {
+    return ((pnl / portfolio) * 100).toFixed(2);
   };
 
   return (
@@ -319,11 +299,9 @@ const TradingSimulator = () => {
 
                       <div className="flex items-center gap-8">
                         <div className="text-right">
-                          <div className={cn("text-lg font-bold", getPnLColor(agent.pnl))}>
-                            {agent.pnl >= 0 ? '+' : ''}${agent.pnl.toFixed(2)}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {agent.pnlPercent >= 0 ? '+' : ''}{agent.pnlPercent}%
+                          <div className="text-sm font-medium">${agent.portfolio.toLocaleString()}</div>
+                          <div className={cn("text-sm", getPnLColor(agent.pnl))}>
+                            {agent.pnl >= 0 ? '+' : ''}{getPercentChange(agent.pnl, agent.portfolio)}%
                           </div>
                         </div>
 
@@ -333,8 +311,32 @@ const TradingSimulator = () => {
                         </div>
 
                         <div className="text-right">
-                          <div className="text-sm font-medium">${agent.portfolio.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">Portfolio</div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Activity className="w-3 h-3" />
+                            <span>${(agent.volume / 1000).toFixed(1)}K USDC</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" className="text-xs px-2 py-1">
+                            Strategy
+                          </Button>
+                          <div className="flex flex-col gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="default" 
+                              className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700"
+                            >
+                              {tradingMode === "buy" ? "Buy" : "Sell"} Yes 65¢
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs px-2 py-1 border-red-600 text-red-600 hover:bg-red-50"
+                            >
+                              {tradingMode === "buy" ? "Buy" : "Sell"} No 35¢
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -350,7 +352,7 @@ const TradingSimulator = () => {
                             <Tabs defaultValue="graph" className="w-full">
                               <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="graph">Graph</TabsTrigger>
-                                <TabsTrigger value="resolution">Resolution</TabsTrigger>
+                                <TabsTrigger value="position">Position</TabsTrigger>
                               </TabsList>
                               <TabsContent value="graph" className="space-y-4">
                                 <div className="h-64">
@@ -365,9 +367,22 @@ const TradingSimulator = () => {
                                   </ResponsiveContainer>
                                 </div>
                               </TabsContent>
-                              <TabsContent value="resolution" className="space-y-4">
-                                <div className="text-sm text-muted-foreground">
-                                  Resolution details for {agent.name} will be available here.
+                              <TabsContent value="position" className="space-y-4">
+                                <div className="space-y-3">
+                                  <div className="text-sm font-medium">Total P&L: <span className={cn(getPnLColor(agent.pnl))}>{agent.pnl >= 0 ? '+' : ''}${agent.pnl.toFixed(2)}</span></div>
+                                  <div className="space-y-2">
+                                    {Object.entries(agent.positions).map(([crypto, position]) => (
+                                      <div key={crypto} className="flex justify-between items-center p-2 bg-accent/20 rounded">
+                                        <span className="font-medium">{crypto}</span>
+                                        <div className="text-right text-sm">
+                                          <div>${position.amount.toLocaleString()}</div>
+                                          <div className={cn("text-xs", getPnLColor(position.pnl))}>
+                                            {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               </TabsContent>
                             </Tabs>
@@ -380,107 +395,15 @@ const TradingSimulator = () => {
               </div>
             </CardContent>
           </Card>
-
-
-          {/* Market Price Charts */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Market Overview</h2>
-            
-            {/* Navigation Bar */}
-            <div className="flex gap-2 mb-4">
-              {cryptos.map((crypto, index) => (
-                <Button
-                  key={crypto}
-                  variant={currentCrypto === index ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleCryptoSelect(index)}
-                  className="transition-all duration-300"
-                >
-                  {crypto}
-                </Button>
-              ))}
-            </div>
-            
-            {/* Single Chart Display */}
-            <Card className="transition-all duration-500">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{markets[currentCrypto].name}</CardTitle>
-                  <div className="text-right">
-                     <div className="text-xl font-bold">
-                       {markets[currentCrypto].symbol === 'XRP' ? `$${markets[currentCrypto].price.toFixed(2)}` : `$${markets[currentCrypto].price.toLocaleString()}`}
-                     </div>
-                    <div className={cn(
-                      "flex items-center gap-1 text-sm font-medium",
-                      markets[currentCrypto].changePercent >= 0 ? "text-green-600" : "text-red-600"
-                    )}>
-                       {markets[currentCrypto].changePercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                       {markets[currentCrypto].changePercent >= 0 ? '+' : ''}{markets[currentCrypto].symbol === 'XRP' ? markets[currentCrypto].change.toFixed(2) : markets[currentCrypto].change} ({markets[currentCrypto].changePercent}%)
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={cryptoData[currentCrypto]}>
-                      <defs>
-                        <linearGradient id={`gradient-${markets[currentCrypto].symbol}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis 
-                        dataKey="time" 
-                        className="text-muted-foreground"
-                        tick={{ fontSize: 10 }}
-                      />
-                      <YAxis 
-                        domain={['dataMin - 50', 'dataMax + 50']}
-                        className="text-muted-foreground"
-                        tick={{ fontSize: 10 }}
-                        tickFormatter={(value) => markets[currentCrypto].symbol === 'XRP' ? `$${value.toFixed(2)}` : `$${value.toLocaleString()}`}
-                      />
-                      <Tooltip 
-                        content={({ active, payload, label }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-                                <p className="label text-sm font-medium">{`Time: ${label}`}</p>
-                                 <p className="intro text-sm text-primary">
-                                   {`Price: ${markets[currentCrypto].symbol === 'XRP' ? `$${(payload[0].value as number).toFixed(2)}` : `$${(payload[0].value as number).toLocaleString()}`}`}
-                                 </p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="price" 
-                        stroke="hsl(var(--primary))" 
-                        fillOpacity={1} 
-                        fill={`url(#gradient-${markets[currentCrypto].symbol})`}
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Portfolio History Section */}
-          <div className="mb-8">
-            <PortfolioHistory />
-          </div>
         </div>
 
         {/* Fixed Modal on the right */}
         <div className="sticky top-4 w-80 z-10">
-          <SimpleBuyModal agentName="QuantumTrader AI" price={65.2} />
+          <SimpleBuyModal 
+            agentName="QuantumTrader AI" 
+            price={65.2} 
+            onModeChange={setTradingMode}
+          />
         </div>
       </div>
     </div>

@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TradingSimulator from "./pages/TradingSimulator";
+import Leaderboard from "./pages/Leaderboard";
+import Portfolio from "./pages/Portfolio";
 import NotFound from "./pages/NotFound";
 import Navigation from "./components/Navigation";
 
@@ -18,6 +20,8 @@ const App = () => (
         <Navigation />
         <Routes>
           <Route path="/" element={<TradingSimulator />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/portfolio" element={<Portfolio />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

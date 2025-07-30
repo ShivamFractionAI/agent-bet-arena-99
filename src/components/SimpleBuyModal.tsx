@@ -8,9 +8,10 @@ interface SimpleBuyModalProps {
   agentName: string;
   price: number; // in cents
   onAgentChange?: (agentName: string) => void;
+  onModeChange?: (mode: "buy" | "sell") => void;
 }
 
-const SimpleBuyModal = ({ agentName, price, onAgentChange }: SimpleBuyModalProps) => {
+const SimpleBuyModal = ({ agentName, price, onAgentChange, onModeChange }: SimpleBuyModalProps) => {
   const [amount, setAmount] = useState<string>("0");
   const [orderType, setOrderType] = useState<"market">("market");
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
@@ -72,7 +73,10 @@ const SimpleBuyModal = ({ agentName, price, onAgentChange }: SimpleBuyModalProps
               variant={activeTab === "buy" ? "default" : "outline"}
               size="sm"
               className={activeTab === "buy" ? "bg-success hover:bg-success/90 text-success-foreground" : "text-muted-foreground"}
-              onClick={() => setActiveTab("buy")}
+              onClick={() => {
+                setActiveTab("buy");
+                onModeChange?.("buy");
+              }}
             >
               Buy
             </Button>
@@ -80,7 +84,10 @@ const SimpleBuyModal = ({ agentName, price, onAgentChange }: SimpleBuyModalProps
               variant={activeTab === "sell" ? "default" : "outline"}
               size="sm"
               className={activeTab === "sell" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : "text-muted-foreground"}
-              onClick={() => setActiveTab("sell")}
+              onClick={() => {
+                setActiveTab("sell");
+                onModeChange?.("sell");
+              }}
             >
               Sell
             </Button>
