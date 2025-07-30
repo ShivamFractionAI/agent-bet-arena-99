@@ -226,6 +226,23 @@ const TradingSimulator = () => {
   const [selectedAgentForBetting, setSelectedAgentForBetting] = useState<Agent | null>(agents[0]);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const [tradingMode, setTradingMode] = useState<"buy" | "sell">("buy");
+  const [strategyDialogOpen, setStrategyDialogOpen] = useState(false);
+  const [selectedStrategyAgent, setSelectedStrategyAgent] = useState<Agent | null>(null);
+
+  // Mock % chance data for agents
+  const generateChanceData = (agentId: string) => {
+    const baseChance = Math.random() * 40 + 30; // 30-70%
+    return [
+      { time: "18:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "19:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "20:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "21:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "22:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "23:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "00:00", chance: baseChance + Math.random() * 10 - 5 },
+      { time: "01:00", chance: baseChance + Math.random() * 10 - 5 }
+    ];
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -242,6 +259,31 @@ const TradingSimulator = () => {
 
   const getPercentChange = (pnl: number, portfolio: number) => {
     return ((pnl / portfolio) * 100).toFixed(2);
+  };
+
+  const getYesPrice = (agent: Agent) => {
+    // Mock yes price based on agent performance
+    const basePrice = 50 + (agent.pnlPercent * 10);
+    return Math.max(10, Math.min(90, basePrice));
+  };
+
+  const getNoPrice = (agent: Agent) => {
+    return 100 - getYesPrice(agent);
+  };
+
+  const handleAgentSelect = (agent: Agent, type: "yes" | "no") => {
+    setSelectedAgentForBetting(agent);
+  };
+
+  const handleStrategyClick = (e: React.MouseEvent, agent: Agent) => {
+    e.stopPropagation();
+    setSelectedStrategyAgent(agent);
+    setStrategyDialogOpen(true);
+  };
+
+  const handleBuyButtonClick = (e: React.MouseEvent, agent: Agent, type: "yes" | "no") => {
+    e.stopPropagation();
+    handleAgentSelect(agent, type);
   };
 
   return (
@@ -277,7 +319,8 @@ const TradingSimulator = () => {
                     <div 
                       className={cn(
                         "flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer",
-                        expandedAgent === agent.id && "bg-accent"
+                        expandedAgent === agent.id && "bg-accent",
+                        selectedAgentForBetting?.id === agent.id && "ring-2 ring-primary"
                       )}
                       onClick={() => setExpandedAgent(expandedAgent === agent.id ? null : agent.id)}
                     >
@@ -318,23 +361,33 @@ const TradingSimulator = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" className="text-xs px-2 py-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs px-2 py-1"
+                            onClick={(e) => handleStrategyClick(e, agent)}
+                          >
                             Strategy
                           </Button>
-                          <div className="flex flex-col gap-1">
+                          <div className="flex gap-1">
                             <Button 
                               size="sm" 
                               variant="default" 
-                              className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700"
+                              className={cn(
+                                "text-xs px-2 py-1",
+                                selectedAgentForBetting?.id === agent.id ? "bg-green-600 hover:bg-green-700 ring-2 ring-green-400" : "bg-green-600 hover:bg-green-700"
+                              )}
+                              onClick={(e) => handleBuyButtonClick(e, agent, "yes")}
                             >
-                              {tradingMode === "buy" ? "Buy" : "Sell"} Yes 65¢
+                              {tradingMode === "buy" ? "Buy" : "Sell"} Yes {getYesPrice(agent).toFixed(0)}¢
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline" 
                               className="text-xs px-2 py-1 border-red-600 text-red-600 hover:bg-red-50"
+                              onClick={(e) => handleBuyButtonClick(e, agent, "no")}
                             >
-                              {tradingMode === "buy" ? "Buy" : "Sell"} No 35¢
+                              {tradingMode === "buy" ? "Buy" : "Sell"} No {getNoPrice(agent).toFixed(0)}¢
                             </Button>
                           </div>
                         </div>
@@ -355,14 +408,43 @@ const TradingSimulator = () => {
                                 <TabsTrigger value="position">Position</TabsTrigger>
                               </TabsList>
                               <TabsContent value="graph" className="space-y-4">
+                                <div className="mb-4">
+                                  <h3 className="font-medium text-lg">{agent.name}</h3>
+                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <Activity className="w-3 h-3" />
+                                    <span>${(agent.volume / 1000).toFixed(1)}K USDC Volume</span>
+                                  </div>
+                                  <div className="flex gap-2 mt-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="default" 
+                                      className="bg-green-600 hover:bg-green-700"
+                                    >
+                                      Buy Yes {getYesPrice(agent).toFixed(0)}¢
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="border-red-600 text-red-600 hover:bg-red-50"
+                                    >
+                                      Buy No {getNoPrice(agent).toFixed(0)}¢
+                                    </Button>
+                                  </div>
+                                </div>
                                 <div className="h-64">
                                   <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={btcPriceData}>
+                                    <LineChart data={generateChanceData(agent.id)}>
                                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                                       <XAxis dataKey="time" className="text-muted-foreground" />
-                                      <YAxis className="text-muted-foreground" />
-                                      <Tooltip />
-                                      <Line type="monotone" dataKey="price" stroke="hsl(var(--primary))" strokeWidth={2} />
+                                      <YAxis 
+                                        domain={[0, 100]} 
+                                        className="text-muted-foreground"
+                                        label={{ value: '% Chance', angle: -90, position: 'insideLeft' }}
+                                      />
+                                      <Tooltip 
+                                        formatter={(value: any) => [`${value.toFixed(1)}%`, '% Chance']}
+                                      />
+                                      <Line type="monotone" dataKey="chance" stroke="hsl(var(--primary))" strokeWidth={2} />
                                     </LineChart>
                                   </ResponsiveContainer>
                                 </div>
@@ -393,6 +475,14 @@ const TradingSimulator = () => {
                   </div>
                 ))}
               </div>
+              
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">Market Resolution Criteria:</h4>
+                <p className="text-sm text-muted-foreground">
+                  The market will resolve to "Yes" if the agent holds the highest PnL at 12:00 PM GMT on August 23, 2025.
+                  It will resolve to "No" if the agent is liquidated before this time or does not have the highest PnL at resolution.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -400,12 +490,40 @@ const TradingSimulator = () => {
         {/* Fixed Modal on the right */}
         <div className="sticky top-4 w-80 z-10">
           <SimpleBuyModal 
-            agentName="QuantumTrader AI" 
-            price={65.2} 
+            agentName={selectedAgentForBetting?.name || "QuantumTrader AI"} 
+            yesPrice={selectedAgentForBetting ? getYesPrice(selectedAgentForBetting) : 65.2}
+            noPrice={selectedAgentForBetting ? getNoPrice(selectedAgentForBetting) : 34.8}
             onModeChange={setTradingMode}
           />
         </div>
       </div>
+
+      {/* Strategy Dialog */}
+      <Dialog open={strategyDialogOpen} onOpenChange={setStrategyDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedStrategyAgent?.name} Strategy</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-medium mb-2">Portfolio Maximization Strategy</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                {selectedStrategyAgent?.strategy}
+              </p>
+              <div className="space-y-2 text-sm">
+                <div><strong>Risk Management:</strong> Dynamic position sizing based on volatility</div>
+                <div><strong>Entry Signals:</strong> Multi-timeframe momentum confirmation</div>
+                <div><strong>Exit Strategy:</strong> Trailing stops with profit-taking levels</div>
+                <div><strong>Portfolio Allocation:</strong> Diversified across BTC, ETH, and SOL</div>
+                <div><strong>Leverage Usage:</strong> Adaptive leverage based on market conditions</div>
+              </div>
+            </div>
+            <Button onClick={() => setStrategyDialogOpen(false)} className="w-full">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

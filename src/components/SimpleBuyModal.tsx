@@ -6,16 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface SimpleBuyModalProps {
   agentName: string;
-  price: number; // in cents
+  yesPrice: number; // in cents
+  noPrice: number; // in cents
   onAgentChange?: (agentName: string) => void;
   onModeChange?: (mode: "buy" | "sell") => void;
 }
 
-const SimpleBuyModal = ({ agentName, price, onAgentChange, onModeChange }: SimpleBuyModalProps) => {
+const SimpleBuyModal = ({ agentName, yesPrice, noPrice, onAgentChange, onModeChange }: SimpleBuyModalProps) => {
   const [amount, setAmount] = useState<string>("0");
   const [orderType, setOrderType] = useState<"market">("market");
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
   const [selectedAgent, setSelectedAgent] = useState(agentName);
+  const [selectedOutcome, setSelectedOutcome] = useState<"yes" | "no">("yes");
 
   const agents = ["QuantumTrader AI", "AlphaBot Pro", "TrendMaster", "CryptoSage", "MarketMind AI"];
 
@@ -34,8 +36,9 @@ const SimpleBuyModal = ({ agentName, price, onAgentChange, onModeChange }: Simpl
   };
 
   const numericAmount = parseFloat(amount) || 0;
-  const potentialWinnings = activeTab === "buy" ? calculateWinnings(numericAmount, price) : 0;
-  const receiveAmount = activeTab === "sell" ? calculateReceiveAmount(numericAmount, price) : 0;
+  const currentPrice = selectedOutcome === "yes" ? yesPrice : noPrice;
+  const potentialWinnings = activeTab === "buy" ? calculateWinnings(numericAmount, currentPrice) : 0;
+  const receiveAmount = activeTab === "sell" ? calculateReceiveAmount(numericAmount, currentPrice) : 0;
 
   const handleTrade = () => {
     console.log(`Trading for ${numericAmount} at market price`);
@@ -95,12 +98,22 @@ const SimpleBuyModal = ({ agentName, price, onAgentChange, onModeChange }: Simpl
         </div>
 
         <div className="space-y-3">
-          <Button 
-            variant="default"
-            className="w-full bg-success hover:bg-success/90 text-success-foreground"
-          >
-            Yes {price.toFixed(1)}¢
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant={selectedOutcome === "yes" ? "default" : "outline"}
+              className={selectedOutcome === "yes" ? "bg-success hover:bg-success/90 text-success-foreground" : ""}
+              onClick={() => setSelectedOutcome("yes")}
+            >
+              Yes {yesPrice.toFixed(0)}¢
+            </Button>
+            <Button 
+              variant={selectedOutcome === "no" ? "default" : "outline"}
+              className={selectedOutcome === "no" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
+              onClick={() => setSelectedOutcome("no")}
+            >
+              No {noPrice.toFixed(0)}¢
+            </Button>
+          </div>
         </div>
 
         <div>
@@ -160,7 +173,7 @@ const SimpleBuyModal = ({ agentName, price, onAgentChange, onModeChange }: Simpl
                 ${potentialWinnings.toFixed(2)}
               </div>
               <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                Avg. Price {price.toFixed(1)}¢ 
+                Avg. Price {currentPrice.toFixed(1)}¢ 
                 <span className="w-3 h-3 rounded-full bg-muted-foreground/20 flex items-center justify-center text-xs">i</span>
               </div>
             </CardContent>
@@ -178,7 +191,7 @@ const SimpleBuyModal = ({ agentName, price, onAgentChange, onModeChange }: Simpl
                 ${receiveAmount.toFixed(2)}
               </div>
               <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                Avg. Price {price.toFixed(1)}¢ 
+                Avg. Price {currentPrice.toFixed(1)}¢ 
                 <span className="w-3 h-3 rounded-full bg-muted-foreground/20 flex items-center justify-center text-xs">i</span>
               </div>
             </CardContent>
