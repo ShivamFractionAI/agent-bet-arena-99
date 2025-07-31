@@ -21,6 +21,7 @@ import SimpleBuyModal from "@/components/SimpleBuyModal";
 import AgentPortfolioChart from "@/components/AgentPortfolioChart";
 import ActivitySection from "@/components/ActivitySection";
 import TopHoldersSection from "@/components/TopHoldersSection";
+import { useNavigate } from "react-router-dom";
 
 interface Agent {
   id: string;
@@ -236,6 +237,7 @@ const markets = [
 ];
 
 const TradingSimulator = () => {
+  const navigate = useNavigate();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [selectedAgentForBetting, setSelectedAgentForBetting] = useState<Agent | null>(agents[0]);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
@@ -303,6 +305,11 @@ const TradingSimulator = () => {
     setSelectedOutcome(type);
   };
 
+  const handleAgentNameClick = (e: React.MouseEvent, agent: Agent) => {
+    e.stopPropagation();
+    navigate(`/agent/${agent.id}`);
+  };
+
   return (
     <div className="w-full max-w-[1424px] mx-auto px-4 py-8 pr-96">
       <div className="mb-8">
@@ -354,7 +361,12 @@ const TradingSimulator = () => {
                         <div className="flex items-center gap-2">
                           <Bot className="w-5 h-5 text-primary" />
                           <div>
-                            <div className="font-medium">{agent.name}</div>
+                            <div 
+                              className="font-medium hover:text-primary cursor-pointer transition-colors"
+                              onClick={(e) => handleAgentNameClick(e, agent)}
+                            >
+                              {agent.name}
+                            </div>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Activity className="w-3 h-3" />
                               <span>${(agent.volume / 1000).toFixed(1)}K USDC</span>
@@ -377,14 +389,6 @@ const TradingSimulator = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-xs px-2 py-1"
-                            onClick={(e) => handleStrategyClick(e, agent)}
-                          >
-                            Strategy
-                          </Button>
                           <div className="flex gap-1">
                             <Button 
                               size="sm" 
@@ -422,9 +426,10 @@ const TradingSimulator = () => {
                         <Card>
                           <CardContent className="p-4">
                             <Tabs defaultValue="graph" className="w-full">
-                              <TabsList className="grid w-full grid-cols-2">
+                              <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="graph">Graph</TabsTrigger>
                                 <TabsTrigger value="position">Position</TabsTrigger>
+                                <TabsTrigger value="strategy">Strategy</TabsTrigger>
                               </TabsList>
                               <TabsContent value="graph" className="space-y-4">
                                 <div className="h-64">
@@ -463,6 +468,21 @@ const TradingSimulator = () => {
                                          </div>
                                        </div>
                                      ))}
+                                 </div>
+                                </div>
+                              </TabsContent>
+                              <TabsContent value="strategy" className="space-y-4">
+                                <div className="p-4 bg-muted/50 rounded-lg">
+                                  <h4 className="font-medium mb-2">Portfolio Maximization Strategy</h4>
+                                  <p className="text-sm text-muted-foreground mb-3">
+                                    {agent.strategy}
+                                  </p>
+                                  <div className="space-y-2 text-sm">
+                                    <div><strong>Risk Management:</strong> Dynamic position sizing based on volatility</div>
+                                    <div><strong>Entry Signals:</strong> Multi-timeframe momentum confirmation</div>
+                                    <div><strong>Exit Strategy:</strong> Trailing stops with profit-taking levels</div>
+                                    <div><strong>Portfolio Allocation:</strong> Diversified across BTC, ETH, SOL, XRP, and BNB</div>
+                                    <div><strong>Leverage Usage:</strong> Adaptive leverage based on market conditions</div>
                                   </div>
                                 </div>
                               </TabsContent>
