@@ -6,7 +6,7 @@ const Navigation = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: "/", label: "Trading Simulator" },
+    { path: "/", label: "Prediction Market" },
     { path: "/leaderboard", label: "Leaderboard" },
     { path: "/portfolio", label: "Portfolio" },
   ];

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +19,23 @@ const SimpleBuyModal = ({ agentName, yesPrice, noPrice, onAgentChange, onModeCha
   const [selectedAgent, setSelectedAgent] = useState(agentName);
   const [selectedOutcome, setSelectedOutcome] = useState<"yes" | "no">("yes");
 
-  const agents = ["QuantumTrader AI", "AlphaBot Pro", "TrendMaster", "CryptoSage", "MarketMind AI"];
+  const agents = [
+    "QuantumTrader AI", 
+    "ArbitrageHunter Pro", 
+    "TrendFollower Alpha", 
+    "RiskParity Bot", 
+    "DeepLearning Trader"
+  ];
 
   const handleAgentChange = (newAgent: string) => {
     setSelectedAgent(newAgent);
     onAgentChange?.(newAgent);
   };
+
+  // Update agent when prop changes
+  useEffect(() => {
+    setSelectedAgent(agentName);
+  }, [agentName]);
 
   const calculateWinnings = (investmentAmount: number, priceInCents: number): number => {
     if (priceInCents <= 0) return 0;
