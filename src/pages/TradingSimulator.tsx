@@ -33,9 +33,11 @@ interface Agent {
   volume: number;
   strategy: string;
   positions: {
-    BTC: { amount: number; pnl: number };
-    SOL: { amount: number; pnl: number };
-    ETH: { amount: number; pnl: number };
+    BTC: { amount: number; pnl: number; leverage: number };
+    SOL: { amount: number; pnl: number; leverage: number };
+    ETH: { amount: number; pnl: number; leverage: number };
+    XRP: { amount: number; pnl: number; leverage: number };
+    BNB: { amount: number; pnl: number; leverage: number };
   };
 }
 
@@ -51,9 +53,11 @@ const agents: Agent[] = [
     volume: 285430.50,
     strategy: "Technical Analysis + Mean Reversion (5x Leverage)",
     positions: {
-      BTC: { amount: 35000, pnl: 1205.30 },
-      SOL: { amount: 30000, pnl: 890.45 },
-      ETH: { amount: 35000, pnl: 755.00 }
+      BTC: { amount: 35000, pnl: 1205.30, leverage: 5 },
+      SOL: { amount: 30000, pnl: 890.45, leverage: 4 },
+      ETH: { amount: 35000, pnl: 755.00, leverage: 6 },
+      XRP: { amount: 15000, pnl: 325.50, leverage: 3 },
+      BNB: { amount: 20000, pnl: 280.75, leverage: 4 }
     }
   },
   {
@@ -67,9 +71,11 @@ const agents: Agent[] = [
     volume: 412350.75,
     strategy: "Cross-Exchange Arbitrage (3x Leverage)",
     positions: {
-      BTC: { amount: 40000, pnl: 680.15 },
-      SOL: { amount: 25000, pnl: 456.80 },
-      ETH: { amount: 35000, pnl: 319.25 }
+      BTC: { amount: 40000, pnl: 680.15, leverage: 3 },
+      SOL: { amount: 25000, pnl: 456.80, leverage: 5 },
+      ETH: { amount: 35000, pnl: 319.25, leverage: 2 },
+      XRP: { amount: 18000, pnl: 245.30, leverage: 4 },
+      BNB: { amount: 22000, pnl: 165.85, leverage: 3 }
     }
   },
   {
@@ -83,9 +89,11 @@ const agents: Agent[] = [
     volume: 195680.30,
     strategy: "Momentum & Trend Following (10x Leverage)",
     positions: {
-      BTC: { amount: 45000, pnl: 425.60 },
-      SOL: { amount: 20000, pnl: 180.25 },
-      ETH: { amount: 35000, pnl: 244.55 }
+      BTC: { amount: 45000, pnl: 425.60, leverage: 10 },
+      SOL: { amount: 20000, pnl: 180.25, leverage: 8 },
+      ETH: { amount: 35000, pnl: 244.55, leverage: 12 },
+      XRP: { amount: 12000, pnl: 95.40, leverage: 6 },
+      BNB: { amount: 18000, pnl: 125.85, leverage: 8 }
     }
   },
   {
@@ -99,9 +107,11 @@ const agents: Agent[] = [
     volume: 156780.90,
     strategy: "Risk Parity & Volatility Targeting (2x Leverage)",
     positions: {
-      BTC: { amount: 33333, pnl: -145.20 },
-      SOL: { amount: 33333, pnl: -85.65 },
-      ETH: { amount: 33334, pnl: -90.00 }
+      BTC: { amount: 33333, pnl: -145.20, leverage: 2 },
+      SOL: { amount: 33333, pnl: -85.65, leverage: 3 },
+      ETH: { amount: 33334, pnl: -90.00, leverage: 2 },
+      XRP: { amount: 16000, pnl: -65.30, leverage: 2 },
+      BNB: { amount: 17000, pnl: -45.85, leverage: 2 }
     }
   },
   {
@@ -115,9 +125,11 @@ const agents: Agent[] = [
     volume: 234560.40,
     strategy: "Neural Networks & Pattern Recognition (8x Leverage)",
     positions: {
-      BTC: { amount: 42000, pnl: -425.30 },
-      SOL: { amount: 28000, pnl: -265.90 },
-      ETH: { amount: 30000, pnl: -199.30 }
+      BTC: { amount: 42000, pnl: -425.30, leverage: 8 },
+      SOL: { amount: 28000, pnl: -265.90, leverage: 6 },
+      ETH: { amount: 30000, pnl: -199.30, leverage: 10 },
+      XRP: { amount: 14000, pnl: -85.40, leverage: 5 },
+      BNB: { amount: 16000, pnl: -115.25, leverage: 7 }
     }
   }
 ];
@@ -308,7 +320,7 @@ const TradingSimulator = () => {
       </div>
 
       <div className="flex gap-8">
-        <div className="flex-1 space-y-6 pr-80">
+        <div className="flex-1 space-y-6 mr-8">
           {/* Portfolio Chart */}
           <div className="mb-8">
             <AgentPortfolioChart />
@@ -317,7 +329,7 @@ const TradingSimulator = () => {
           {/* Agent Performance */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-xl">Agent Performance</CardTitle>
+              <CardTitle className="text-xl">Which Agent Will Have the Highest P&L by Aug 1st, 12PM GMT?</CardTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Timer className="w-4 h-4" />
                 Trading session: 6h 24m remaining
@@ -361,7 +373,7 @@ const TradingSimulator = () => {
 
                         <div className="text-right">
                           <div className="text-sm font-medium">{agent.winRate}%</div>
-                          <div className="text-xs text-muted-foreground">Win Rate</div>
+                          <div className="text-xs text-muted-foreground">% Chance</div>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -437,17 +449,20 @@ const TradingSimulator = () => {
                                 <div className="space-y-3">
                                   <div className="text-sm font-medium">Total P&L: <span className={cn(getPnLColor(agent.pnl))}>{agent.pnl >= 0 ? '+' : ''}${agent.pnl.toFixed(2)}</span></div>
                                   <div className="space-y-2">
-                                    {Object.entries(agent.positions).map(([crypto, position]) => (
-                                      <div key={crypto} className="flex justify-between items-center p-2 bg-accent/20 rounded">
-                                        <span className="font-medium">{crypto}</span>
-                                        <div className="text-right text-sm">
-                                          <div>${position.amount.toLocaleString()}</div>
-                                          <div className={cn("text-xs", getPnLColor(position.pnl))}>
-                                            {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
+                                     {Object.entries(agent.positions).map(([crypto, position]) => (
+                                       <div key={crypto} className="flex justify-between items-center p-2 bg-accent/20 rounded">
+                                         <div>
+                                           <span className="font-medium">{crypto}</span>
+                                           <div className="text-xs text-muted-foreground">{position.leverage}x Leverage</div>
+                                         </div>
+                                         <div className="text-right text-sm">
+                                           <div>${position.amount.toLocaleString()}</div>
+                                           <div className={cn("text-xs", getPnLColor(position.pnl))}>
+                                             {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
+                                           </div>
+                                         </div>
+                                       </div>
+                                     ))}
                                   </div>
                                 </div>
                               </TabsContent>
@@ -505,7 +520,7 @@ const TradingSimulator = () => {
         </div>
 
         {/* Fixed Modal on the right */}
-        <div className="fixed top-8 right-4 w-80 z-10">
+        <div className="fixed top-4 right-4 w-80 z-10">
           <SimpleBuyModal 
             agentName={selectedAgentForBetting?.name || "QuantumTrader AI"} 
             yesPrice={selectedAgentForBetting ? getYesPrice(selectedAgentForBetting) : 65.2}
