@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   LineChart, 
   Line, 
@@ -34,6 +35,9 @@ const AgentProfile = () => {
   const { agentId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [performancePeriod, setPerformancePeriod] = useState("D");
+  const [compareAgents, setCompareAgents] = useState(false);
+  const [tradesTab, setTradesTab] = useState("positions");
 
   // Mock agent data - in real app this would come from API
   const agent = {
@@ -42,31 +46,35 @@ const AgentProfile = () => {
     avatar: "/placeholder.svg",
     description: "Advanced quantum-inspired trading algorithm with multi-dimensional market analysis",
     winRate: 72.3,
+    topThreeRate: 37.5,
+    wins: 3,
+    total: 8,
     totalTrades: 1247,
     totalProfit: 28507.50,
     currentRank: 1,
     followers: 15643,
     strategy: "Technical Analysis + Mean Reversion (5x Leverage)",
     joinDate: "March 2024",
-    achievements: [
-      { name: "Top Performer", description: "Ranked #1 for 3 consecutive weeks", icon: Trophy },
-      { name: "Risk Master", description: "Maintained <5% drawdown", icon: Target },
-      { name: "Consistency King", description: "30+ profitable days in a row", icon: Star }
-    ],
     dailyPerformance: [
-      { date: "Jan 1", pnl: 1205, portfolio: 98795, winner: true },
-      { date: "Jan 2", pnl: 890, portfolio: 99685, winner: false },
-      { date: "Jan 3", pnl: 1567, portfolio: 101252, winner: true },
-      { date: "Jan 4", pnl: -320, portfolio: 100932, winner: false },
-      { date: "Jan 5", pnl: 2150, portfolio: 103082, winner: true },
-      { date: "Jan 6", pnl: 445, portfolio: 103527, winner: false },
-      { date: "Jan 7", pnl: 1890, portfolio: 105417, winner: true }
+      { date: "Jan 1", pnl: 1205, portfolio: 98795, rank: 2, isToday: false },
+      { date: "Jan 2", pnl: 890, portfolio: 99685, rank: 3, isToday: false },
+      { date: "Jan 3", pnl: 1567, portfolio: 101252, rank: 1, isToday: false },
+      { date: "Jan 4", pnl: -320, portfolio: 100932, rank: 4, isToday: false },
+      { date: "Jan 5", pnl: 2150, portfolio: 103082, rank: 1, isToday: false },
+      { date: "Jan 6", pnl: 445, portfolio: 103527, rank: 3, isToday: false },
+      { date: "Jan 7", pnl: 1890, portfolio: 105417, rank: 1, isToday: true }
     ],
-    monthlyStats: [
-      { month: "Oct", profit: 5420, winRate: 68.5, trades: 156 },
-      { month: "Nov", profit: 7230, winRate: 72.1, trades: 189 },
-      { month: "Dec", profit: 8450, winRate: 74.8, trades: 203 },
-      { month: "Jan", profit: 7407, winRate: 71.2, trades: 178 }
+    weeklyPerformance: [
+      { date: "Week 1", pnl: 5420, portfolio: 105420, rank: 1, isToday: false },
+      { date: "Week 2", pnl: 3210, portfolio: 108630, rank: 2, isToday: false },
+      { date: "Week 3", pnl: 7890, portfolio: 116520, rank: 1, isToday: false },
+      { date: "Week 4", pnl: 2150, portfolio: 118670, rank: 3, isToday: true }
+    ],
+    monthlyPerformance: [
+      { date: "Oct", pnl: 15420, portfolio: 115420, rank: 1, isToday: false },
+      { date: "Nov", pnl: 12350, portfolio: 127770, rank: 2, isToday: false },
+      { date: "Dec", pnl: 18900, portfolio: 146670, rank: 1, isToday: false },
+      { date: "Jan", pnl: 8507, portfolio: 155177, rank: 1, isToday: true }
     ],
     strategies: [
       {
@@ -83,7 +91,39 @@ const AgentProfile = () => {
         leverage: "3x avg",
         confidence: 72
       }
-    ]
+    ],
+    // Mock data for multi-agent comparison
+    agentComparison: [
+      { date: "Jan 1", QuantumTrader: 98795, AlphaBot: 97200, TrendMaster: 99100, CryptoGuru: 96800, RiskMinimizer: 98500 },
+      { date: "Jan 2", QuantumTrader: 99685, AlphaBot: 98100, TrendMaster: 98900, CryptoGuru: 97200, RiskMinimizer: 99200 },
+      { date: "Jan 3", QuantumTrader: 101252, AlphaBot: 99800, TrendMaster: 100200, CryptoGuru: 98500, RiskMinimizer: 100100 },
+      { date: "Jan 4", QuantumTrader: 100932, AlphaBot: 98900, TrendMaster: 99800, CryptoGuru: 97800, RiskMinimizer: 99900 },
+      { date: "Jan 5", QuantumTrader: 103082, AlphaBot: 100200, TrendMaster: 101500, CryptoGuru: 99100, RiskMinimizer: 101800 },
+      { date: "Jan 6", QuantumTrader: 103527, AlphaBot: 100800, TrendMaster: 102100, CryptoGuru: 99800, RiskMinimizer: 102200 },
+      { date: "Jan 7", QuantumTrader: 105417, AlphaBot: 102500, TrendMaster: 103800, CryptoGuru: 101200, RiskMinimizer: 103900 }
+    ],
+    // Mock user trades data
+    userTrades: {
+      positions: [
+        { id: 1, agent: "QuantumTrader AI", shares: 150, avgPrice: 1.25, currentPrice: 1.45, pnl: 30.00, pnlPercent: 16.0 },
+        { id: 2, agent: "AlphaBot", shares: 75, avgPrice: 0.85, currentPrice: 0.92, pnl: 5.25, pnlPercent: 8.2 }
+      ],
+      history: [
+        { id: 1, date: "Jan 7", action: "BUY", agent: "QuantumTrader AI", shares: 100, price: 1.20, total: 120.00 },
+        { id: 2, date: "Jan 6", action: "BUY", agent: "QuantumTrader AI", shares: 50, price: 1.35, total: 67.50 },
+        { id: 3, date: "Jan 5", action: "SELL", agent: "AlphaBot", shares: 25, price: 0.95, total: 23.75 },
+        { id: 4, date: "Jan 4", action: "BUY", agent: "AlphaBot", shares: 100, price: 0.85, total: 85.00 }
+      ]
+    }
+  };
+
+  // Get performance data based on selected period
+  const getPerformanceData = () => {
+    switch (performancePeriod) {
+      case "W": return agent.weeklyPerformance;
+      case "M": return agent.monthlyPerformance;
+      default: return agent.dailyPerformance;
+    }
   };
 
   const getInitials = (name: string) => {
@@ -159,103 +199,93 @@ const AgentProfile = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="strategy">Strategy</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="trades">Your Trades</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Key Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/20 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Profit</p>
-                      <p className="text-2xl font-bold text-green-600">${agent.totalProfit.toLocaleString()}</p>
-                    </div>
+              {/* Total Profit with Rank */}
+              <Card className="bg-gradient-to-br from-card to-card/80 border border-border/50">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Total Profit</p>
+                    <p className="text-xl font-bold text-yellow-500 mb-1">${agent.totalProfit.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">Rank: {agent.currentRank}</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <Target className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Win Rate</p>
-                      <p className="text-2xl font-bold text-blue-600">{agent.winRate}%</p>
-                    </div>
+              {/* Win Rate */}
+              <Card className="bg-gradient-to-br from-card to-card/80 border border-border/50">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Win Rate</p>
+                    <p className="text-lg font-bold text-foreground">{agent.wins}/{agent.total}</p>
+                    <p className="text-sm text-primary">{agent.winRate}% wins</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <Zap className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Trades</p>
-                      <p className="text-2xl font-bold text-purple-600">{agent.totalTrades}</p>
-                    </div>
+              {/* Top 3 Rate */}
+              <Card className="bg-gradient-to-br from-card to-card/80 border border-border/50">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Top 3 Rate</p>
+                    <p className="text-lg font-bold text-foreground">{agent.wins}/{agent.total}</p>
+                    <p className="text-sm text-primary">{agent.topThreeRate}% wins</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-orange-500/20 rounded-lg">
-                      <Trophy className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Current Rank</p>
-                      <p className="text-2xl font-bold text-orange-600">#{agent.currentRank}</p>
-                    </div>
+              {/* Current Rank */}
+              <Card className="bg-gradient-to-br from-card to-card/80 border border-border/50">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Current Rank</p>
+                    <p className="text-xl font-bold text-orange-600">#{agent.currentRank}</p>
+                    <p className="text-xs text-muted-foreground">out of 5</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Achievements */}
+            {/* P&L Performance Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="w-5 h-5" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {agent.achievements.map((achievement, index) => (
-                    <div key={index} className="p-4 border border-border rounded-lg bg-muted/20">
-                      <div className="flex items-center gap-3 mb-2">
-                        <achievement.icon className="w-5 h-5 text-primary" />
-                        <h4 className="font-medium">{achievement.name}</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <CardTitle>P&L Performance</CardTitle>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant={performancePeriod === "D" ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => setPerformancePeriod("D")}
+                    >
+                      D
+                    </Button>
+                    <Button 
+                      variant={performancePeriod === "W" ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => setPerformancePeriod("W")}
+                    >
+                      W
+                    </Button>
+                    <Button 
+                      variant={performancePeriod === "M" ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => setPerformancePeriod("M")}
+                    >
+                      M
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Daily Performance Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Daily P&L Performance</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={agent.dailyPerformance}>
+                    <BarChart data={getPerformanceData()}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="date" className="text-muted-foreground" />
                       <YAxis className="text-muted-foreground" />
@@ -264,69 +294,24 @@ const AgentProfile = () => {
                           name === 'pnl' ? `$${value}` : value, 
                           name === 'pnl' ? 'P&L' : name
                         ]}
-                        labelFormatter={(label) => `Date: ${label}`}
+                        labelFormatter={(label, payload) => {
+                          const data = payload?.[0]?.payload;
+                          return `${label} - Rank #${data?.rank || 'N/A'}`;
+                        }}
                       />
                       <Bar 
                         dataKey="pnl" 
                         fill="hsl(var(--primary))"
                         radius={[4, 4, 0, 0]}
+                        shape={({ payload, ...props }) => (
+                          <rect 
+                            {...props} 
+                            fill={payload.isToday ? "hsl(var(--chart-2))" : "hsl(var(--primary))"}
+                          />
+                        )}
                       />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="performance" className="space-y-6">
-            {/* Monthly Performance */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Performance Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={agent.monthlyStats}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="month" className="text-muted-foreground" />
-                      <YAxis className="text-muted-foreground" />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="profit" stroke="hsl(var(--primary))" strokeWidth={3} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Competition History */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Competition History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {agent.dailyPerformance.map((day, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-3 h-3 rounded-full ${day.winner ? 'bg-green-500' : 'bg-muted'}`} />
-                        <div>
-                          <p className="font-medium">{day.date}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {day.winner ? 'Won Daily Competition' : 'Participated'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-medium ${day.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {day.pnl >= 0 ? '+' : ''}${day.pnl}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Portfolio: ${day.portfolio.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -426,17 +411,146 @@ const AgentProfile = () => {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-6">
-            {/* Trade History Table */}
+            {/* Competition History */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Trading History</CardTitle>
+                <CardTitle>Competition History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <Brain className="w-12 h-12 mx-auto mb-4" />
-                  <p>Detailed trade history coming soon...</p>
-                  <p className="text-sm">We're building comprehensive trade analytics for all agents.</p>
+                <div className="space-y-4">
+                  {agent.dailyPerformance.map((day, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                          day.rank === 1 ? 'bg-yellow-500 text-black' : 
+                          day.rank === 2 ? 'bg-gray-400 text-white' :
+                          day.rank === 3 ? 'bg-orange-600 text-white' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          #{day.rank}
+                        </div>
+                        <div>
+                          <p className="font-medium">{day.date}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Rank #{day.rank} - {day.rank === 1 ? 'Winner' : 'Participant'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-medium ${day.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {day.pnl >= 0 ? '+' : ''}${day.pnl}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Portfolio: ${day.portfolio.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Agent Comparison */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Portfolio Performance vs Other Agents</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="compare-agents" 
+                      checked={compareAgents}
+                      onCheckedChange={(checked) => setCompareAgents(checked === true)}
+                    />
+                    <label htmlFor="compare-agents" className="text-sm font-medium">
+                      Compare with other agents
+                    </label>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {compareAgents ? (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={agent.agentComparison}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="date" className="text-muted-foreground" />
+                        <YAxis className="text-muted-foreground" />
+                        <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Portfolio']} />
+                        <Line type="monotone" dataKey="QuantumTrader" stroke="hsl(var(--primary))" strokeWidth={3} name="QuantumTrader AI" />
+                        <Line type="monotone" dataKey="AlphaBot" stroke="hsl(var(--chart-2))" strokeWidth={2} name="AlphaBot" />
+                        <Line type="monotone" dataKey="TrendMaster" stroke="hsl(var(--chart-3))" strokeWidth={2} name="TrendMaster" />
+                        <Line type="monotone" dataKey="CryptoGuru" stroke="hsl(var(--chart-4))" strokeWidth={2} name="CryptoGuru" />
+                        <Line type="monotone" dataKey="RiskMinimizer" stroke="hsl(var(--chart-5))" strokeWidth={2} name="RiskMinimizer" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Brain className="w-12 h-12 mx-auto mb-4" />
+                    <p>Check "Compare with other agents" to see portfolio performance comparison</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="trades" className="space-y-6">
+            {/* Your Trades Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Trades</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={tradesTab} onValueChange={setTradesTab}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="positions">Positions</TabsTrigger>
+                    <TabsTrigger value="history">History</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="positions" className="mt-6">
+                    <div className="space-y-4">
+                      {agent.userTrades.positions.map((position) => (
+                        <div key={position.id} className="p-4 border border-border rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium">{position.agent}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {position.shares} shares @ ${position.avgPrice.toFixed(2)} avg
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-muted-foreground">Current: ${position.currentPrice.toFixed(2)}</p>
+                              <p className={`font-medium ${position.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)} ({position.pnlPercent >= 0 ? '+' : ''}{position.pnlPercent.toFixed(1)}%)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="history" className="mt-6">
+                    <div className="space-y-4">
+                      {agent.userTrades.history.map((trade) => (
+                        <div key={trade.id} className="p-4 border border-border rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium">{trade.agent}</h4>
+                              <p className="text-sm text-muted-foreground">{trade.date}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className={`font-medium ${trade.action === 'BUY' ? 'text-green-600' : 'text-red-600'}`}>
+                                {trade.action} {trade.shares} @ ${trade.price.toFixed(2)}
+                              </p>
+                              <p className="text-sm text-muted-foreground">Total: ${trade.total.toFixed(2)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </TabsContent>
