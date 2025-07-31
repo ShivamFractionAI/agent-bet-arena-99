@@ -304,7 +304,7 @@ const TradingSimulator = () => {
   };
 
   return (
-    <div className="w-full max-w-[1424px] mx-auto px-4 py-8">
+    <div className="w-full max-w-[1424px] mx-auto px-4 py-8 pr-96">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Which Agent Will Have the Highest P&L by Aug 1st, 12PM GMT?</h1>
         <div className="flex items-center gap-4 text-muted-foreground text-lg">
@@ -520,7 +520,7 @@ const TradingSimulator = () => {
         </div>
 
         {/* Fixed Modal on the right */}
-        <div className="fixed top-4 right-4 w-80 z-10">
+        <div className="fixed top-20 right-4 w-80 z-10">
           <SimpleBuyModal 
             agentName={selectedAgentForBetting?.name || "QuantumTrader AI"} 
             yesPrice={selectedAgentForBetting ? getYesPrice(selectedAgentForBetting) : 65.2}
