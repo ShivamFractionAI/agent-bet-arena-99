@@ -86,35 +86,110 @@ const Leaderboard = () => {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Rankings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="weekly" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="weekly">Weekly</TabsTrigger>
-              <TabsTrigger value="alltime">All Time</TabsTrigger>
-            </TabsList>
-            <TabsContent value="weekly" className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 p-4 bg-accent/20 rounded-lg text-sm font-medium text-muted-foreground">
-                <div>Rank</div>
-                <div>Username</div>
-                <div className="text-right">Total Profit</div>
-              </div>
-              <LeaderboardTable data={weeklyData} />
-            </TabsContent>
-            <TabsContent value="alltime" className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 p-4 bg-accent/20 rounded-lg text-sm font-medium text-muted-foreground">
-                <div>Rank</div>
-                <div>Username</div>
-                <div className="text-right">Total Profit</div>
-              </div>
-              <LeaderboardTable data={allTimeData} />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="weekly" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="weekly">Weekly</TabsTrigger>
+          <TabsTrigger value="alltime">All Time</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="weekly" className="space-y-4">
+          <div className="grid grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Volume Leaders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 p-4 bg-accent/20 rounded-lg text-sm font-medium text-muted-foreground mb-4">
+                  <div>Rank</div>
+                  <div>Username</div>
+                  <div className="text-right">Volume</div>
+                </div>
+                <div className="space-y-2">
+                  {weeklyData.slice(0, 5).map((entry) => (
+                    <div
+                      key={entry.rank}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        {getRankIcon(entry.rank)}
+                        <span className="font-medium">{entry.username}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-primary">
+                          ${(entry.totalProfit * 2.5).toFixed(0)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Profit Leaders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 p-4 bg-accent/20 rounded-lg text-sm font-medium text-muted-foreground mb-4">
+                  <div>Rank</div>
+                  <div>Username</div>
+                  <div className="text-right">Total Profit</div>
+                </div>
+                <LeaderboardTable data={weeklyData.slice(0, 5)} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="alltime" className="space-y-4">
+          <div className="grid grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Volume Leaders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 p-4 bg-accent/20 rounded-lg text-sm font-medium text-muted-foreground mb-4">
+                  <div>Rank</div>
+                  <div>Username</div>
+                  <div className="text-right">Volume</div>
+                </div>
+                <div className="space-y-2">
+                  {allTimeData.slice(0, 5).map((entry) => (
+                    <div
+                      key={entry.rank}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        {getRankIcon(entry.rank)}
+                        <span className="font-medium">{entry.username}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-primary">
+                          ${(entry.totalProfit * 3.2).toFixed(0)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Profit Leaders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 p-4 bg-accent/20 rounded-lg text-sm font-medium text-muted-foreground mb-4">
+                  <div>Rank</div>
+                  <div>Username</div>
+                  <div className="text-right">Total Profit</div>
+                </div>
+                <LeaderboardTable data={allTimeData.slice(0, 5)} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

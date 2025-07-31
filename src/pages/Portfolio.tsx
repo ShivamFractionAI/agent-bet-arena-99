@@ -207,9 +207,9 @@ const Portfolio = () => {
                     </Badge>
                   </div>
                   <div>
-                    <Badge variant={position.type === "Yes" ? "default" : "secondary"}>
+                    <span className={cn("font-medium", position.type === "Yes" ? "text-green-600" : "text-red-600")}>
                       {position.type}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="text-sm">
                     <div>{position.shares}</div>
@@ -221,12 +221,12 @@ const Portfolio = () => {
                       {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
                     </span>
                     {position.status === "Active" ? (
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="text-white">
                         Sell
                       </Button>
                     ) : (
                       position.pnl > 0 && (
-                        <Button size="sm" variant="default">
+                        <Button size="sm" variant="default" className="text-white">
                           Claim
                         </Button>
                       )
@@ -251,12 +251,12 @@ const Portfolio = () => {
                     <div className="font-medium text-sm">{entry.market}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={entry.action === "Buy" ? "default" : "outline"}>
+                    <span className="font-medium text-white">
                       {entry.action}
-                    </Badge>
-                    <Badge variant={entry.type === "Yes" ? "default" : "secondary"} className="text-xs">
+                    </span>
+                    <span className={cn("font-medium text-xs", entry.type === "Yes" ? "text-green-600" : "text-red-600")}>
                       {entry.type}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="text-sm">
                     <div>{entry.shares}</div>

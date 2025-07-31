@@ -10,14 +10,16 @@ interface SimpleBuyModalProps {
   noPrice: number; // in cents
   onAgentChange?: (agentName: string) => void;
   onModeChange?: (mode: "buy" | "sell") => void;
+  selectedOutcome?: "yes" | "no";
+  onOutcomeChange?: (outcome: "yes" | "no") => void;
 }
 
-const SimpleBuyModal = ({ agentName, yesPrice, noPrice, onAgentChange, onModeChange }: SimpleBuyModalProps) => {
+const SimpleBuyModal = ({ agentName, yesPrice, noPrice, onAgentChange, onModeChange, selectedOutcome: propSelectedOutcome, onOutcomeChange }: SimpleBuyModalProps) => {
   const [amount, setAmount] = useState<string>("0");
   const [orderType, setOrderType] = useState<"market">("market");
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
   const [selectedAgent, setSelectedAgent] = useState(agentName);
-  const [selectedOutcome, setSelectedOutcome] = useState<"yes" | "no">("yes");
+  const [selectedOutcome, setSelectedOutcome] = useState<"yes" | "no">(propSelectedOutcome || "yes");
 
   const agents = [
     "QuantumTrader AI", 
@@ -36,6 +38,19 @@ const SimpleBuyModal = ({ agentName, yesPrice, noPrice, onAgentChange, onModeCha
   useEffect(() => {
     setSelectedAgent(agentName);
   }, [agentName]);
+
+  // Update outcome when prop changes
+  useEffect(() => {
+    if (propSelectedOutcome) {
+      setSelectedOutcome(propSelectedOutcome);
+    }
+  }, [propSelectedOutcome]);
+
+  // Handle outcome change
+  const handleOutcomeChange = (outcome: "yes" | "no") => {
+    setSelectedOutcome(outcome);
+    onOutcomeChange?.(outcome);
+  };
 
   const calculateWinnings = (investmentAmount: number, priceInCents: number): number => {
     if (priceInCents <= 0) return 0;
@@ -113,14 +128,14 @@ const SimpleBuyModal = ({ agentName, yesPrice, noPrice, onAgentChange, onModeCha
             <Button 
               variant={selectedOutcome === "yes" ? "default" : "outline"}
               className={selectedOutcome === "yes" ? "bg-success hover:bg-success/90 text-success-foreground" : ""}
-              onClick={() => setSelectedOutcome("yes")}
+              onClick={() => handleOutcomeChange("yes")}
             >
               Yes {yesPrice.toFixed(0)}¢
             </Button>
             <Button 
               variant={selectedOutcome === "no" ? "default" : "outline"}
               className={selectedOutcome === "no" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
-              onClick={() => setSelectedOutcome("no")}
+              onClick={() => handleOutcomeChange("no")}
             >
               No {noPrice.toFixed(0)}¢
             </Button>

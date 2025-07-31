@@ -231,6 +231,7 @@ const TradingSimulator = () => {
   const [strategyDialogOpen, setStrategyDialogOpen] = useState(false);
   const [selectedStrategyAgent, setSelectedStrategyAgent] = useState<Agent | null>(null);
   const [activeTab, setActiveTab] = useState<"activity" | "top-holders">("activity");
+  const [selectedOutcome, setSelectedOutcome] = useState<"yes" | "no">("yes");
 
   // Mock % chance data for agents
   const generateChanceData = (agentId: string) => {
@@ -287,6 +288,7 @@ const TradingSimulator = () => {
   const handleBuyButtonClick = (e: React.MouseEvent, agent: Agent, type: "yes" | "no") => {
     e.stopPropagation();
     handleAgentSelect(agent, type);
+    setSelectedOutcome(type);
   };
 
   return (
@@ -305,9 +307,8 @@ const TradingSimulator = () => {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* Main Content - Left Side */}
-        <div className="flex-1">
+      <div className="flex gap-8">
+        <div className="flex-1 space-y-6 pr-80">
           {/* Portfolio Chart */}
           <div className="mb-8">
             <AgentPortfolioChart />
@@ -378,7 +379,7 @@ const TradingSimulator = () => {
                               variant="default" 
                               className={cn(
                                 "text-xs px-2 py-1",
-                                selectedAgentForBetting?.id === agent.id ? "bg-green-600 hover:bg-green-700 ring-2 ring-green-400" : "bg-green-600 hover:bg-green-700"
+                                selectedAgentForBetting?.id === agent.id && selectedOutcome === "yes" ? "bg-green-600 hover:bg-green-700 ring-2 ring-green-400" : "bg-green-600 hover:bg-green-700"
                               )}
                               onClick={(e) => handleBuyButtonClick(e, agent, "yes")}
                             >
@@ -387,7 +388,10 @@ const TradingSimulator = () => {
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="text-xs px-2 py-1 border-red-600 text-red-600 hover:bg-red-50"
+                              className={cn(
+                                "text-xs px-2 py-1 border-red-600 text-red-600 hover:bg-red-50",
+                                selectedAgentForBetting?.id === agent.id && selectedOutcome === "no" ? "bg-red-100 ring-2 ring-red-400" : ""
+                              )}
                               onClick={(e) => handleBuyButtonClick(e, agent, "no")}
                             >
                               {tradingMode === "buy" ? "Buy" : "Sell"} No {getNoPrice(agent).toFixed(0)}¢
@@ -501,12 +505,14 @@ const TradingSimulator = () => {
         </div>
 
         {/* Fixed Modal on the right */}
-        <div className="fixed top-4 right-4 w-80 z-10">
+        <div className="fixed top-8 right-4 w-80 z-10">
           <SimpleBuyModal 
             agentName={selectedAgentForBetting?.name || "QuantumTrader AI"} 
             yesPrice={selectedAgentForBetting ? getYesPrice(selectedAgentForBetting) : 65.2}
             noPrice={selectedAgentForBetting ? getNoPrice(selectedAgentForBetting) : 34.8}
             onModeChange={setTradingMode}
+            selectedOutcome={selectedOutcome}
+            onOutcomeChange={setSelectedOutcome}
           />
         </div>
       </div>
